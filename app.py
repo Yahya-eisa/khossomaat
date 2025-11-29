@@ -22,6 +22,8 @@ def fix_arabic(text):
 def fill_down(series):
     return series.ffill()
 
+def replace_muaaqal_with_confirm_safe(df):
+    return df.replace('معلق', 'تم التأكيد')
 
 def classify_city(city):
     if pd.isna(city) or str(city).strip() == '':
@@ -211,6 +213,7 @@ if uploaded_files:
             file_name=file_name,
             mime="application/pdf"
         )
+
 
 
 
