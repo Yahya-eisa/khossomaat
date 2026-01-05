@@ -163,7 +163,7 @@ def df_to_pdf_table(df, title="KHOSOMAAT"):
 
 # ---------- Streamlit App ----------
 st.set_page_config(page_title="🔥🏷️🏷️ KHOSOMAAT Orders Processor", layout="wide")
-st.title("🔥🏷️🏷️ KHOSOMAAT Orders Processor")
+st.title("🔥🏷️🏷️ KHOSOMAAT Orders Processor>>>>>")
 st.markdown(".... ارفع اي عدد ملفات يعجبك")
 
 uploaded_files = st.file_uploader(
@@ -240,6 +240,7 @@ if uploaded_files:
         file_name=file_name,
         mime="application/pdf"
     )
+
 
 
 
