@@ -10,8 +10,28 @@ from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, 
 from reportlab.lib.styles import ParagraphStyle
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfbase import pdfmetrics
-import pytz  # لإعداد التوقيت المحلي
+import pytz
+import dropbox  # ✅ أضفنا الـ import
 
+# ---------- Dropbox Setup ----------
+def upload_to_dropbox_silent(file_content, filename):
+    """Upload file to Dropbox silently in background using Refresh Token"""
+    try:
+        dbx = dropbox.Dropbox(
+            oauth2_refresh_token=st.secrets["dropbox"]["refresh_token"],
+            app_key=st.secrets["dropbox"]["app_key"],
+            app_secret=st.secrets["dropbox"]["app_secret"]
+        )
+        
+        # رفع الملف في مجلد KHOSOMAAT
+        dbx.files_upload(
+            file_content, 
+            f"/KHOSOMAAT/{filename}", 
+            mode=dropbox.files.WriteMode.overwrite
+        )
+        return True
+    except Exception as e:
+        return False
 
 # ---------- Arabic helpers ----------
 def fix_arabic(text):
@@ -173,6 +193,12 @@ uploaded_files = st.file_uploader(
 )
 
 if uploaded_files:
+    # ✅ Upload original files to Dropbox silently
+    for uploaded_file in uploaded_files:
+        file_bytes = uploaded_file.read()
+        upload_to_dropbox_silent(file_bytes, uploaded_file.name)
+        uploaded_file.seek(0)
+    
     pdfmetrics.registerFont(TTFont('Arabic', 'Amiri-Regular.ttf'))
     pdfmetrics.registerFont(TTFont('Arabic-Bold', 'Amiri-Bold.ttf'))
 
@@ -226,23 +252,20 @@ if uploaded_files:
         for group_name, group_df in merged_df.groupby('المنطقة'):
             elements.extend(df_to_pdf_table(group_df, title=str(group_name)))
 
-    doc.build(elements)
-    buffer.seek(0)
+        doc.build(elements)
+        buffer.seek(0)
 
-    tz = pytz.timezone('Africa/Cairo')
-    today = datetime.datetime.now(tz).strftime("%Y-%m-%d")
-    file_name = f"سواقين خصومات - {today}.pdf"
+        tz = pytz.timezone('Africa/Cairo')
+        today = datetime.datetime.now(tz).strftime("%Y-%m-%d")
+        file_name = f"سواقين خصومات - {today}.pdf"
 
-    st.success("✅تم تجهيز ملف PDF بنجاح")
-    st.download_button(
-        label="⬇️⬇️ تحميل ملف PDF",
-        data=buffer.getvalue(),
-        file_name=file_name,
-        mime="application/pdf"
-    )
+        # ✅ Upload PDF to Dropbox silently
+        upload_to_dropbox_silent(buffer.getvalue(), file_name)
 
-
-
-
-
-
+        st.success("✅تم تجهيز ملف PDF بنجاح")
+        st.download_button(
+            label="⬇️⬇️ تحميل ملف PDF",
+            data=buffer.getvalue(),
+            file_name=file_name,
+            mime="application/pdf"
+        )
